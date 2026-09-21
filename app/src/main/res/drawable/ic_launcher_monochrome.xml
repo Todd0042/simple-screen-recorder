@@ -31,19 +31,14 @@
         android:pathData="M 64,44.5 L 72.5,39.5 A 1.5,1.5 0 0 1 74,41 V 53 A 1.5,1.5 0 0 1 72.5,54.5 L 64,49.5 Z"
         android:fillColor="#FFFFFF" />
 
-    <!-- Camera Lens Ring -->
+    <!-- Camera Lens Ring cutout -->
     <path
         android:pathData="M 45.5,40.5 A 6.5,6.5 0 1 0 45.501,40.5"
         android:strokeWidth="2.8"
-        android:strokeColor="#4F46E5" />
+        android:strokeColor="#000000" />
 
-    <!-- Red Recording Indicator Glow -->
-    <path
-        android:pathData="M 63,28.5 A 7.5,7.5 0 1 0 63.001,28.5"
-        android:fillColor="#55EF4444" />
-
-    <!-- Red Recording Indicator Core -->
+    <!-- Recording Indicator Core -->
     <path
         android:pathData="M 63,31 A 5,5 0 1 0 63.001,31"
-        android:fillColor="#EF4444" />
+        android:fillColor="#FFFFFF" />
 </vector>

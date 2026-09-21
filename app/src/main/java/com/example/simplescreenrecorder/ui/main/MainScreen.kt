@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -590,36 +591,89 @@ fun MainScreen(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // Shortcut Button to Open Google Photos / Gallery App
-                        OutlinedButton(
-                            onClick = {
-                                val photosIntent = Intent(Intent.ACTION_VIEW).apply {
-                                    setDataAndType(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, "video/*")
-                                    setPackage("com.google.android.apps.photos")
-                                }
-                                try {
-                                    context.startActivity(photosIntent)
-                                } catch (e: Exception) {
-                                    val genericIntent = Intent(Intent.ACTION_VIEW).apply {
-                                        setDataAndType(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, "video/*")
+                        // Shortcut Buttons to Open Captures Folder (Files app) and Google Photos
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            OutlinedButton(
+                                onClick = {
+                                    // 1. Try opening Movies/captures directly in Files app via DocumentsContract
+                                    val folderUri = DocumentsContract.buildDocumentUri(
+                                        "com.android.externalstorage.documents",
+                                        "primary:Movies/captures"
+                                    )
+                                    val filesIntent = Intent(Intent.ACTION_VIEW).apply {
+                                        setDataAndType(folderUri, DocumentsContract.Document.MIME_TYPE_DIR)
+                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
                                     }
                                     try {
-                                        context.startActivity(genericIntent)
-                                    } catch (e2: Exception) {
-                                        val launchIntent = context.packageManager.getLaunchIntentForPackage("com.google.android.apps.photos")
-                                        if (launchIntent != null) {
-                                            context.startActivity(launchIntent)
-                                        } else {
-                                            Toast.makeText(context, "Could not open Photos app", Toast.LENGTH_SHORT).show()
+                                        context.startActivity(filesIntent)
+                                    } catch (e: Exception) {
+                                        // Fallback 1: ACTION_OPEN_DOCUMENT_TREE with initial URI
+                                        val treeUri = DocumentsContract.buildTreeDocumentUri(
+                                            "com.android.externalstorage.documents",
+                                            "primary:Movies/captures"
+                                        )
+                                        val treeIntent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
+                                            putExtra(DocumentsContract.EXTRA_INITIAL_URI, treeUri)
+                                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        }
+                                        try {
+                                            context.startActivity(treeIntent)
+                                        } catch (e2: Exception) {
+                                            // Fallback 2: General root files intent
+                                            val generalFilesIntent = Intent(Intent.ACTION_VIEW).apply {
+                                                setDataAndType(Uri.parse("content://com.android.externalstorage.documents/root/primary"), DocumentsContract.Document.MIME_TYPE_DIR)
+                                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                            }
+                                            try {
+                                                context.startActivity(generalFilesIntent)
+                                            } catch (e3: Exception) {
+                                                Toast.makeText(context, "Could not open folder in Files", Toast.LENGTH_SHORT).show()
+                                            }
                                         }
                                     }
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Icon(Icons.Default.PhotoLibrary, contentDescription = null)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Open Captures Folder in Photos")
+                                },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Icon(Icons.Default.Folder, contentDescription = null)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Open Folder")
+                            }
+
+                            OutlinedButton(
+                                onClick = {
+                                    val photosIntent = Intent(Intent.ACTION_VIEW).apply {
+                                        setDataAndType(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, "video/*")
+                                        setPackage("com.google.android.apps.photos")
+                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    }
+                                    try {
+                                        context.startActivity(photosIntent)
+                                    } catch (e: Exception) {
+                                        val genericIntent = Intent(Intent.ACTION_VIEW).apply {
+                                            setDataAndType(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, "video/*")
+                                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        }
+                                        try {
+                                            context.startActivity(genericIntent)
+                                        } catch (e2: Exception) {
+                                            val launchIntent = context.packageManager.getLaunchIntentForPackage("com.google.android.apps.photos")
+                                            if (launchIntent != null) {
+                                                context.startActivity(launchIntent)
+                                            } else {
+                                                Toast.makeText(context, "Could not open Photos app", Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
+                                    }
+                                },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Icon(Icons.Default.PhotoLibrary, contentDescription = null)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Photos App")
+                            }
                         }
 
                         Spacer(modifier = Modifier.height(12.dp))
