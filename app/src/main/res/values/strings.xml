@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Simple Screen Recorder</string>
+    <string name="tile_label">Screen Record</string>
+</resources>
